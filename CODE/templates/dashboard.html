@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Voice Navigation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .dashboard-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            width: 400px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-read {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-voice {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-text {
+            background: #2196f3;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .voice-button {
+            background: #ff5722;
+            color: white;
+            font-size: 18px;
+            padding: 12px;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            border: none;
+            transition: 0.3s;
+        }
+
+        .voice-button:hover {
+            background: #e64a19;
+        }
+
+        #status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <h2>Welcome to the Voice-Based Email System</h2>
+        
+        <!-- Fix button actions -->
+<button class="btn btn-voice" onclick="window.location.href='/send_email_voice'">🎤 Send Email via Voice</button>
+<button class="btn btn-text" onclick="window.location.href='/send_email_text'">📝 Send Email via Text</button>
+
+        <button class="btn btn-read" onclick="window.location.href='/read_email'">📩 Read Latest Email</button>
+
+        
+        <button class="voice-button" onclick="startVoiceCommand()">🎙️ Use Voice Command</button>
+        <p id="status">Click the button to speak.</p>
+    </div>
+
+    <script>
+        function speak(text, callback) {
+            let speech = new SpeechSynthesisUtterance(text);
+            speech.pitch = 1;
+            speech.rate = 1;
+            speech.onend = callback;  // Start listening only after speaking finishes
+            window.speechSynthesis.speak(speech);
+        }
+
+        function startVoiceCommand() {
+            document.getElementById("status").innerText = "Listening... Please speak.";
+
+            let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = "en-US";
+            recognition.continuous = true;  // Keeps listening until user gives a valid command
+            recognition.interimResults = false;
+
+            speak("Say 'Read' to read email, 'Voice' to send email using voice, or 'Text' to send email using text.", function() {
+                recognition.start();
+            });
+
+            recognition.onresult = function(event) {
+                let voiceInput = event.results[event.results.length - 1][0].transcript.toLowerCase();
+                console.log("User said:", voiceInput);
+
+                if (voiceInput.includes("read")) {
+                    speak("Opening Read Email", function() {
+                        window.location.href = "/read_email";
+                    });
+                    recognition.stop();
+                } else if (voiceInput.includes("voice")) {
+                    speak("Opening Send Email via Voice", function() {
+                        window.location.href = "/send_email_voice";
+                    });
+                    recognition.stop();
+                } else if (voiceInput.includes("text")) {
+                    speak("Opening Send Email via Text", function() {
+                        window.location.href = "/send_email_text";
+                    });
+                    recognition.stop();
+                } else {
+                    speak("Sorry, I didn't understand. Please try again.");
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.log("Speech recognition error:", event.error);
+                speak("I couldn't hear you. Please try again.");
+            };
+
+            recognition.onend = function() {
+                document.getElementById("status").innerText = "Click the button to speak again.";
+            };
+        }
+    </script>
+
+</body>
+</html>

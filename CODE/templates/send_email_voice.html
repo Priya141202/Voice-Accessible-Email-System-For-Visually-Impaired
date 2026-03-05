@@ -1,0 +1,208 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🎤 Voice Email Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #007bff, #00c6ff);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: #fff;
+      padding: 40px 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      color: #007bff;
+      margin-bottom: 25px;
+      font-weight: 700;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: 1.5px solid #ccc;
+      font-size: 15px;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 14px;
+      width: 100%;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    #status {
+      display: none;
+      color: green;
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    .mic-icon {
+      font-size: 24px;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.6; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0.6; transform: scale(0.95); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>🎤 Voice Email Assistant</h2>
+  <form method="POST" action="/send_email_voice" id="voiceForm">
+    <input type="text" id="recipient" name="recipient" placeholder="Recipient Name">
+    <input type="text" id="subject" name="subject" placeholder="Email Subject">
+    <textarea id="email_body" name="email_body" placeholder="Type your message or speak..."></textarea>
+    <button type="submit">📨 Send Email</button>
+    <div id="status" class="mic-icon">🎙️ Listening...</div>
+  </form>
+</div>
+
+<script>
+  async function speakText(text) {
+    return new Promise((resolve) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.onend = () => setTimeout(resolve, 500);
+      speechSynthesis.speak(utterance);
+    });
+  }
+
+  async function listenText() {
+    return new Promise((resolve, reject) => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        reject("SpeechRecognition not supported in your browser.");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        document.getElementById("status").style.display = "block";
+      };
+
+      recognition.onresult = (event) => {
+        const result = event.results[0][0].transcript;
+        resolve(result);
+      };
+
+      recognition.onerror = (event) => {
+        reject("Speech recognition error: " + event.error);
+      };
+
+      recognition.onend = () => {
+        document.getElementById("status").style.display = "none";
+      };
+
+      recognition.start();
+    });
+  }
+
+  async function fillField(id, question) {
+    const field = document.getElementById(id);
+    field.style.border = "2px solid green";
+    await speakText(question);
+    try {
+      const result = await listenText();
+      field.value = result;
+      await speakText("You said " + result);
+    } catch (err) {
+      console.error(err);
+      await speakText("Sorry, I didn't catch that.");
+    }
+    field.style.border = "";
+  }
+
+  async function sendEmailSimulation() {
+    await speakText("Do you want to send the email now? Say 'send mail' to confirm.");
+    try {
+      const response = await listenText();
+      if (response.toLowerCase().includes("send mail")) {
+        document.getElementById("voiceForm").submit(); // ✅ Submit form
+      } else {
+        await speakText("Email not sent. You said: " + response);
+      }
+    } catch (err) {
+      console.error("Error in final confirmation:", err);
+    }
+  }
+
+  async function voiceInputAll() {
+    try {
+      await fillField("recipient", "Please tell the recipient name.");
+      await fillField("subject", "What is the subject of the email?");
+      await fillField("email_body", "What message do you want to send?");
+      await sendEmailSimulation();
+    } catch (err) {
+      console.error("Voice input failed:", err);
+      alert("Voice input failed. Please try again.");
+    }
+  }
+
+  window.onload = () => {
+    setTimeout(voiceInputAll, 1000);
+  };
+</script>
+
+</body>
+</html>

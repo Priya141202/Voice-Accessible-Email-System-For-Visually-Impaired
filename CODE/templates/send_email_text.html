@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📩 Send Email</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            background: white;
+            padding: 25px;
+            width: 400px;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px;
+            width: 100%;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+            background-color: #4caf50;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>📨 Send Email</h2>
+
+        <form method="POST" action="{{ url_for('send_email_text') }}">
+            <label for="recipient">Recipient Name:</label>
+            <input type="text" name="recipient" id="recipient" required onblur="speakText(this)">
+
+            <label for="subject">Subject:</label>
+            <input type="text" name="subject" id="subject" required onblur="speakText(this)">
+
+            <label for="body">Message:</label>
+            <textarea name="body" id="email_body" required onblur="speakText(this)"></textarea>
+
+            <button type="submit">📩 Send Email</button>
+        </form>
+    </div>
+
+    <script>
+        function speakText(element) {
+            let text = element.value.trim();
+            if (text) {
+                let speech = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(speech);
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Voice Email</title>
+
+  <script>
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const fields = [
+      { id: "recipient", question: "What is the recipient name?" },
+      { id: "subject", question: "What is the subject?" },
+      { id: "body", question: "What is the message?" }
+    ];
+
+    let current = 0;
+
+    function speak(text, callback) {
+      const synth = window.speechSynthesis;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "en-US";
+      utter.onend = callback;
+      synth.speak(utter);
+    }
+
+    function listen(fieldId, callback) {
+      if (!SpeechRecognition) {
+        alert("Speech Recognition not supported in this browser.");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.start();
+
+      recognition.onresult = function (event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById(fieldId).value = transcript;
+        callback();
+      };
+
+      recognition.onerror = function () {
+        speak("Sorry, I didn't catch that. Please try again.", () => listen(fieldId, callback));
+      };
+    }
+
+    function startVoiceFill() {
+      current = 0;
+
+      function fillNext() {
+        if (current >= fields.length) {
+          speak("All fields are filled. Here's the summary.", () => {
+            readBackAllFields();
+          });
+          return;
+        }
+
+        const field = fields[current];
+        speak(field.question, () => {
+          listen(field.id, () => {
+            current++;
+            fillNext();
+          });
+        });
+      }
+
+      fillNext();
+    }
+
+    function readBackAllFields() {
+      const recipient = document.getElementById("recipient").value;
+      const subject = document.getElementById("subject").value;
+      const body = document.getElementById("body").value;
+
+      const summary = `You are sending an email to ${recipient}, 
+      with subject ${subject}, 
+      and message body: ${body}.`;
+
+      speak(summary, () => {
+        speak("If everything is correct, you can now submit the email.");
+      });
+    }
+
+    window.onload = function() {
+      startVoiceFill();
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #4facfe, #00f2fe);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 15px rgba(0,0,0,0.2);
+      width: 400px;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      text-align: left;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>📨 Voice Email Form</h2>
+
+  <form action="/send_email_voice" method="POST">
+    <label>Recipient Name:</label>
+    <input type="text" id="recipient" name="recipient" required />
+
+    <label>Subject:</label>
+    <input type="text" id="subject" name="subject" required />
+
+    <label>Message Body:</label>
+    <textarea id="body" name="body" rows="5" required></textarea>
+
+    <button type="submit">📩 Send Email</button>
+  </form>
+</div>
+
+</body>
+</html>
