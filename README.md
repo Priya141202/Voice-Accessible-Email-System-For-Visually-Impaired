@@ -85,6 +85,7 @@ pip install speechrecognition pyttsx3 smtplib imaplib
 Run the main Python file:
 
 python main.py
+
 10. Future Enhancements
 
 Mobile application integration
